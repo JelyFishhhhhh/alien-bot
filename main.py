@@ -14,7 +14,7 @@ client = discord.Client()
 def mode(msg,info):
     msg=msg.lower()
     if msg=='ping':
-        print(f'{info.author} is asking the bot\'s ping')
+        print(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} >>> {info.author} is asking the bot\'s ping')
         return str(round(client.latency*1000))+' (ms)'
     
     elif msg=='restart':
@@ -24,6 +24,7 @@ def mode(msg,info):
         sys.exit()
 
     else:
+        print(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} >>> {info.author} cmd a unknown cmd.')
         return 'err0r'
 
 with open('bot.json', mode='r', encoding='utf8') as file:
@@ -31,7 +32,7 @@ with open('bot.json', mode='r', encoding='utf8') as file:
 
 @client.event
 async def on_ready():
-    print(f'{client.user} is on the air.')
+    print(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} >>> {client.user} is on the air.')
 
 @client.event 
 async def on_message(message):
@@ -39,7 +40,7 @@ async def on_message(message):
         return
     
     try:
-        print((message.content[0]==prefix)*'command')
+        print((message.content[0]==prefix)*'>>> command')
     except IndexError:
         print(f'its a picture :|')
         return
@@ -47,7 +48,7 @@ async def on_message(message):
     if message.content[0]==prefix:
         await message.channel.send(f'{mode(message.content[1:],message)}')
     elif (message.content.lower()) in ('hello', 'hi','嗨','哈囉','你好','泥好','嗨你好'):
-        print(f'say hello to {message.author}')
+        print(f'{datetime.datetime.now():%Y-%m-%d %H:%M:%S} >>> say hello to {message.author}')
         await message.channel.send(f'Hello <@{message.author.id}>')
 
 if __name__ == '__main__':
