@@ -1,54 +1,91 @@
+from turtle import title
 import discord
 from discord.ext import commands
+from discord.ext import tasks
 
 import datetime
 import youtube_dl
 import ffmpeg
+import asyncio
+
+youtube_dl.utils.bug_reports_message = lambda: ''
+
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
+ffmpeg_options = {
+    'options': '-vn'
+}
 
 class music(commands.Cog):
     def __init__(self, client):
         self.client=client
+        self.musicQueue=[]
+
+    async def checkQue(self,ctx):
+        if len(self.musicQueue) > 0:
+            await self.playSong(ctx)
+            server = ctx.message.guild
+            voice_channel = server.voice_client
+            while voice_channel.is_playing():
+                a=self.musicQueue[0]
+            print('end')
+            self.musicQueue.pop()
+        else:
+            await ctx.send('No song in queue.')
+    
+    async def playSong(self,ctx):
+        voice_channel = ctx.voice_client
+        self.joinChannel
+        with youtube_dl.YoutubeDL(ytdl_format_options) as ydl:
+            info=ydl.extract_info(self.musicQueue[0], download=False)
+            url2 = info['formats'][0]['url']
+            source = await discord.FFmpegOpusAudio.from_probe(url2, **ffmpeg_options)
+            voice_channel.play(source)
+
+    async def joinChannel(self,ctx):
+        if not ctx.author.voice:
+            await ctx.send(f'<@{ctx.author.id}>plz join a voice channel.')
+        voiceChannel=ctx.author.voice.channel
+        await voiceChannel.connect()
 
     @commands.command()
     async def join(self,ctx):
-        if ctx.author.voice is None:
-            await ctx.send(f'<@{ctx.author.id}>plz join a voice channel.')
-        voiceChannel=ctx.author.voice.channel
-        if ctx.voice_client is None:
-            await voiceChannel.connect()
-        else:
-            await ctx.voice_client.move_to(voiceChannel)
+        await self.joinChannel(ctx)
     
     @commands.command()
     async def leave(self,ctx):
-        await ctx.voice_client.disconnect()
+        ctx.voice_client.disconnect()
     
     @commands.command()
-    async def play(self,ctx,msg):
-        #ctx.voice_client.stop()
-        FFMPEG_OPTIONS={'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-        YDL_OPTIONS = {'format' : 'bestaudio'}
-        vc=ctx.voice_client
-        print(msg)
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-            info=ydl.extract_info(msg, download=False)
-            url2 = info['formats'][0]['url']
-            source = await discord.FFmpegOpusAudio.from_probe(url2, **FFMPEG_OPTIONS)
-            vc.play(source)
-    
+    async def play(self,ctx, *,msg):
+        self.musicQueue.append(msg)
+        await self.checkQue(ctx)
+        
     @commands.command()
     async def pause(self,ctx):
-        await ctx.voice_client.pause()
+        ctx.voice_client.pause()
         await self.send('pause')
     
     @commands.command()
     async def resume(self,ctx):
-        await ctx.voice_client.resume()
+        ctx.voice_client.resume()
         await ctx.send('resume')
     
     @commands.command()
     async def stop(self,ctx):
-        await ctx.voice_client.stop()
+        ctx.voice_client.stop()
         await ctx.send('stop')
 
 def setup(client):
