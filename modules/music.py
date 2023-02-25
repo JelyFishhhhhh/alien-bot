@@ -21,7 +21,7 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0'
 }
 
 ffmpeg_options = {
@@ -35,9 +35,11 @@ class music(commands.Cog):
 
     async def checkQue(self,ctx):
         if len(self.musicQueue) > 0:
-            await self.playSong(ctx)
             server = ctx.message.guild
             voice_channel = server.voice_client
+            while voice_channel.is_playing():
+                a=self.musicQueue[0]
+            await self.playSong(ctx)
             while voice_channel.is_playing():
                 a=self.musicQueue[0]
             print('end')
